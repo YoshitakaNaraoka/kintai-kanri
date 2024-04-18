@@ -3,6 +3,7 @@ use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -14,6 +15,11 @@ extern "C" {
 struct LoginArgs<'a> {
     mail: &'a str,
     pass: &'a str,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Page<'b> {
+    hello: &'b str,
 }
 
 #[function_component(App)]
@@ -69,6 +75,25 @@ pub fn app() -> Html {
                     .unwrap()
                     .value(),
             );
+        })
+    };
+
+    #[derive(Clone, Routable, PartialEq)]
+    enum MainRoute {
+        #[at("/")]
+        Home,
+        #[at("/ui")]
+        hello,
+    }
+
+    fn switch_main(route: MainRoute) -> Html {
+        match route {
+            hello -> html! hello.html,
+        }
+
+    let hello = {
+        Callback::from(move |f:SubmitEvent| {
+            f.(ui::hello.html, query).unwrap();
         })
     };
 
