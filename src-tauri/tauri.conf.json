@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "kintai-kanri",
+    "productName": "Attendance management",
     "version": "0.0.0"
   },
   "tauri": {
@@ -20,7 +20,7 @@
     },
     "windows": [
       {
-        "title": "kintai-kanri",
+        "title": "Attendance management",
         "width": 800,
         "height": 600
       }
