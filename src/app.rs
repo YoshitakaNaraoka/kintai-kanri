@@ -19,35 +19,35 @@ struct LoginArgs<'a> {
 #[function_component(App)]
 pub fn app() -> Html {
     let login_input_ref = use_node_ref();
-
     let mail = use_state(|| String::new());
-    
     let login_msg = use_state(|| String::new());
+
     {
         let login_msg = login_msg.clone();
         let mail = mail.clone();
         let pass = mail.clone(); // str の中身は一つのものを.clone()で使いまわせる
-        use_effect_with(
-            mail.clone(),
-            move |_| {
-                spawn_local(async move {
-                    if mail.is_empty() {
-                        return;
-                    }
+        use_effect_with(mail.clone(), move |_| {
+            spawn_local(async move {
+                if mail.is_empty() {
+                    return;
+                }
 
-                    if pass.is_empty() {
-                        return;
-                    }
+                if pass.is_empty() {
+                    return;
+                }
 
-                    let args = to_value(&LoginArgs { mail: & mail, pass: & pass }).unwrap();
-                    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-                    let new_msg = invoke("login", args).await.as_string().unwrap();
-                    login_msg.set(new_msg);
-                });
+                let args = to_value(&LoginArgs {
+                    mail: &mail,
+                    pass: &pass,
+                })
+                .unwrap();
+                // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+                let new_msg = invoke("login", args).await.as_string().unwrap();
+                login_msg.set(new_msg);
+            });
 
-                || {}
-            },
-        );
+            || {}
+        });
     }
 
     let login = {
