@@ -12,29 +12,35 @@ extern "C" {
 
 #[derive(Serialize, Deserialize)]
 struct LoginArgs<'a> {
-    name: &'a str,
+    mail: &'a str,
+    pass: &'a str,
 }
 
 #[function_component(App)]
 pub fn app() -> Html {
     let login_input_ref = use_node_ref();
 
-    let name = use_state(|| String::new());
-
+    let mail = use_state(|| String::new());
+    let pass = use_state(|| String::new());
+    
     let login_msg = use_state(|| String::new());
     {
         let login_msg = login_msg.clone();
-        let name = name.clone();
-        let name2 = name.clone();
+        let mail = mail.clone();
+        let pass = pass.clone();
         use_effect_with(
-            name2,
+            mail.clone(),
             move |_| {
                 spawn_local(async move {
-                    if name.is_empty() {
+                    if mail.is_empty() {
                         return;
                     }
 
-                    let args = to_value(&LoginArgs { name: &*name }).unwrap();
+                    if pass.is_empty() {
+                        return;
+                    }
+
+                    let args = to_value(&LoginArgs { mail: & mail, pass: & pass }).unwrap();
                     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
                     let new_msg = invoke("login", args).await.as_string().unwrap();
                     login_msg.set(new_msg);
@@ -46,11 +52,11 @@ pub fn app() -> Html {
     }
 
     let login = {
-        let name = name.clone();
+        let mail = mail.clone();
         let login_input_ref = login_input_ref.clone();
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
-            name.set(
+            mail.set(
                 login_input_ref
                     .cast::<web_sys::HtmlInputElement>()
                     .unwrap()
@@ -73,7 +79,8 @@ pub fn app() -> Html {
             <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
             <form class="row" onsubmit={login}>
-                <input id="greet-input" ref={login_input_ref} placeholder="Your mail address" />
+                <input id="login-input" ref={&login_input_ref} placeholder="Your mail address" />
+                <input id="login-input" ref={&login_input_ref} placeholder="Password" />
                 <button type="submit">{"Login"}</button>
             </form>
 
