@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "sample",
+    "productName": "kintai-kanri",
     "version": "0.0.0"
   },
   "tauri": {
@@ -20,7 +20,7 @@
     },
     "windows": [
       {
-        "title": "sample",
+        "title": "kintai-kanri",
         "width": 800,
         "height": 600
       }
