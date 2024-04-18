@@ -11,19 +11,19 @@ extern "C" {
 }
 
 #[derive(Serialize, Deserialize)]
-struct GreetArgs<'a> {
+struct LoginArgs<'a> {
     name: &'a str,
 }
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let greet_input_ref = use_node_ref();
+    let login_input_ref = use_node_ref();
 
     let name = use_state(|| String::new());
 
-    let greet_msg = use_state(|| String::new());
+    let login_msg = use_state(|| String::new());
     {
-        let greet_msg = greet_msg.clone();
+        let login_msg = login_msg.clone();
         let name = name.clone();
         let name2 = name.clone();
         use_effect_with(
@@ -34,10 +34,10 @@ pub fn app() -> Html {
                         return;
                     }
 
-                    let args = to_value(&GreetArgs { name: &*name }).unwrap();
+                    let args = to_value(&LoginArgs { name: &*name }).unwrap();
                     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-                    let new_msg = invoke("greet", args).await.as_string().unwrap();
-                    greet_msg.set(new_msg);
+                    let new_msg = invoke("login", args).await.as_string().unwrap();
+                    login_msg.set(new_msg);
                 });
 
                 || {}
@@ -45,13 +45,13 @@ pub fn app() -> Html {
         );
     }
 
-    let greet = {
+    let login = {
         let name = name.clone();
-        let greet_input_ref = greet_input_ref.clone();
+        let login_input_ref = login_input_ref.clone();
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
             name.set(
-                greet_input_ref
+                login_input_ref
                     .cast::<web_sys::HtmlInputElement>()
                     .unwrap()
                     .value(),
@@ -81,12 +81,12 @@ pub fn app() -> Html {
                 <a href="https://github.com/rust-lang/rust-analyzer" target="_blank">{"rust-analyzer"}</a>
             </p>
 
-            <form class="row" onsubmit={greet}>
-                <input id="greet-input" ref={greet_input_ref} placeholder="Enter a name..." />
-                <button type="submit">{"Greet"}</button>
+            <form class="row" onsubmit={login}>
+                <input id="greet-input" ref={login_input_ref} placeholder="Your mail address" />
+                <button type="submit">{"Login"}</button>
             </form>
 
-            <p><b>{ &*greet_msg }</b></p>
+            <p><b>{ &*login_msg }</b></p>
         </main>
     }
 }
