@@ -1,5 +1,5 @@
 [package]
-name = "kintai-kanri-ui"
+name = "sample-ui"
 version = "0.0.0"
 edition = "2021"
 
