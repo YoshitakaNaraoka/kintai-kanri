@@ -3,7 +3,6 @@ use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -17,9 +16,36 @@ struct LoginArgs<'a> {
     pass: &'a str,
 }
 
-#[derive(Serialize, Deserialize)]
-struct Page<'b> {
-    hello: &'b str,
+pub struct Model {
+    link: ComponentLink<Self>,
+}
+
+pub enum Msg {
+    GoToHome,
+    GoToDetail,
+}
+
+impl Component for Model {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self { link }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::GoToHome => {
+                // Tauriコマンドを呼び出してホーム画面へ遷移
+                tauri::command::spawn("go_to_home".to_string());
+            }
+            Msg::GoToDetail => {
+                // Tauriコマンドを呼び出して詳細画面へ遷移
+                tauri::command::spawn("go_to_detail".to_string());
+            }
+        }
+        false
+    }
 }
 
 #[function_component(App)]
@@ -78,25 +104,6 @@ pub fn app() -> Html {
         })
     };
 
-    #[derive(Clone, Routable, PartialEq)]
-    enum MainRoute {
-        #[at("/")]
-        Home,
-        #[at("/ui")]
-        hello,
-    }
-
-    fn switch_main(route: MainRoute) -> Html {
-        match route {
-            hello -> html! hello.html,
-        }
-
-    let hello = {
-        Callback::from(move |f:SubmitEvent| {
-            f.(ui::hello.html, query).unwrap();
-        })
-    };
-
     html! {
         <main class="container">
             <div class="row">
@@ -120,3 +127,12 @@ pub fn app() -> Html {
         </main>
     }
 }
+
+fn view(&self) -> Html {
+    html! {
+        <div>
+            <button onclick=self.link.callback(|_| Msg::GoToHome)>{"Go to Home"}</button>
+            <button onclick=self.link.callback(|_| Msg::GoToDetail)>{"Go to Detail"}</button>
+        </div>
+    }
+};
