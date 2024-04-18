@@ -21,13 +21,12 @@ pub fn app() -> Html {
     let login_input_ref = use_node_ref();
 
     let mail = use_state(|| String::new());
-    let pass = use_state(|| String::new());
     
     let login_msg = use_state(|| String::new());
     {
         let login_msg = login_msg.clone();
         let mail = mail.clone();
-        let pass = pass.clone();
+        let pass = mail.clone(); // str の中身は一つのものを.clone()で使いまわせる
         use_effect_with(
             mail.clone(),
             move |_| {
@@ -53,10 +52,18 @@ pub fn app() -> Html {
 
     let login = {
         let mail = mail.clone();
+        let pass = mail.clone();
         let login_input_ref = login_input_ref.clone();
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
             mail.set(
+                login_input_ref
+                    .cast::<web_sys::HtmlInputElement>()
+                    .unwrap()
+                    .value(),
+            );
+
+            pass.set(
                 login_input_ref
                     .cast::<web_sys::HtmlInputElement>()
                     .unwrap()
@@ -80,7 +87,7 @@ pub fn app() -> Html {
 
             <form class="row" onsubmit={login}>
                 <input id="login-input" ref={&login_input_ref} placeholder="Your mail address" />
-                <input id="login-input" ref={&login_input_ref} placeholder="Password" />
+                <input id="login-input" ref={&login_input_ref} placeholder="Password" /> // 参照がいる
                 <button type="submit">{"Login"}</button>
             </form>
 
