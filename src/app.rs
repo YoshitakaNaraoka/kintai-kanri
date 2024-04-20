@@ -81,6 +81,9 @@ pub fn app() -> Html {
                 <a href="https://yew.rs" target="_blank">
                     <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
                 </a>
+                <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
+                    <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
+                </a>
             </div>
 
             <p>{"Click on the Tauri and Yew logos to learn more."}</p>
