@@ -2,7 +2,7 @@
 
 use yew::prelude::*;
 
-pub mod hello {
+pub mod Hello {
   pub struct App {}
 
   pub enum Msg {
