@@ -3,7 +3,7 @@
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![login,logout])
+        .invoke_handler(tauri::generate_handler![login,logout,show_ui])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -21,4 +21,9 @@ fn logout(window: tauri::Window) {
     window
         .emit("goto", Some(vec!["home".to_string()]))
         .expect("failed to emit goto event");
+}
+
+#[tauri::command]
+fn show_ui(window: tauri::Window) {
+    window.eval("location.href = 'hello.html';").unwrap();
 }
