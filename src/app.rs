@@ -9,56 +9,54 @@ enum LoginResult {
     Failure(String),
 }
 
+// ログインフォームとメッセージコンポーネントを含むアプリケーションのコンポーネント
+struct App {
+    login_form_link: ComponentLink<LoginForm>,
+    message: Option<String>,
+}
+
 // ログインフォームのコンポーネント
 struct LoginForm {
     link: ComponentLink<Self>,
-    props: LoginFormProps,
-}
-
-#[derive(Properties, Clone, PartialEq)]
-struct LoginFormProps {
     on_login: Callback<LoginResult>,
 }
 
 impl Component for LoginForm {
     type Message = ();
-    type Properties = LoginFormProps;
+    type Properties = Callback<LoginResult>;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(on_login: Self::Properties, link: ComponentLink<Self>) -> Self {
         LoginForm {
             link,
-            props,
+            on_login,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            () => {
-                let document = window().unwrap().document().unwrap();
-                let mail_input = document.get_element_by_id("login-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
-                let pass_input = document.get_element_by_id("password-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
-                let mail_value = mail_input.value();
-                let pass_value = pass_input.value();
+    fn update(&mut self, _: Self::Message) -> ShouldRender {
+        let document = window().unwrap().document().unwrap();
+        let mail_input = document.get_element_by_id("login-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
+        let pass_input = document.get_element_by_id("password-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
+        let mail_value = mail_input.value();
+        let pass_value = pass_input.value();
 
-                // ログイン要求をサーバーに送信（ここではダミーの非同期処理を模擬）
-                let future = async move {
-                    // サーバーとの通信や認証が成功したと仮定
-                    if mail_value == "user@example.com" && pass_value == "password" {
-                        LoginResult::Success("Login successful!".to_string())
-                    } else {
-                        LoginResult::Failure("Login failed!".to_string())
-                    }
-                };
-
-                // 非同期処理の結果を処理
-                self.link.send_future(async move {
-                    match future.await {
-                        LoginResult::Success(msg) => LoginResult::Success(msg),
-                        LoginResult::Failure(msg) => LoginResult::Failure(msg),
-                    }
-                });
+        // ログイン要求をサーバーに送信（ここではダミーの非同期処理を模擬）
+        let future = async move {
+            // サーバーとの通信や認証が成功したと仮定
+            if mail_value == "user@example.com" && pass_value == "password" {
+                LoginResult::Success("Login successful!".to_string())
+            } else {
+                LoginResult::Failure("Login failed!".to_string())
             }
-        }
+        };
+
+        // 非同期処理の結果を処理
+        self.link.send_future(async move {
+            match future.await {
+                LoginResult::Success(msg) => LoginResult::Success(msg),
+                LoginResult::Failure(msg) => LoginResult::Failure(msg),
+            }
+        });
+
         false
     }
 
@@ -83,54 +81,58 @@ impl Component for LoginForm {
 }
 
 // メッセージコンポーネント
-#[derive(Properties, Clone, PartialEq)]
-struct MessageComponentProps {
-    message: String,
-}
+struct MessageComponent;
 
-fn message_component(props: &MessageComponentProps) -> Html {
-    html! {
-        <p><b>{ &props.message }</b></p>
+impl Component for MessageComponent {
+    type Message = Option<String>;
+    type Properties = ();
+
+    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+        MessageComponent
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        if let Some(message) = msg {
+            // ログイン成功時のメッセージを受信
+            // ここでページの遷移などの処理を行う
+            true // 再描画をトリガー
+        } else {
+            false
+        }
+    }
+
+    fn view(&self) -> Html {
+        html! {
+            <p><b>{ self.props }</b></p>
+        }
     }
 }
-
-// アプリケーションのエントリーポイント
-fn main() {
-    yew::start_app::<App>();
-}
-
-// アプリケーションのコンポーネント
-struct App;
 
 impl Component for App {
     type Message = LoginResult;
     type Properties = ();
 
     fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        App
+        App {
+            login_form_link: ComponentLink::default(),
+            message: None,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             LoginResult::Success(msg) => {
-                // ログイン成功時のメッセージを受信
-                // ここでページの遷移などの処理を行う
+                self.message = Some(msg);
                 true // 再描画をトリガー
             }
             LoginResult::Failure(msg) => {
-                // ログイン失敗時のメッセージを受信
-                // ここでエラーメッセージを表示などの処理を行う
+                self.message = Some(msg);
                 true // 再描画をトリガー
             }
         }
     }
 
     fn view(&self) -> Html {
-        // LoginFormPropsを作成して、LoginFormコンポーネントに渡す
-        let login_form_props = LoginFormProps {
-            on_login: self.link.callback(|result| result),
-        };
-
         html! {
             <main class="container">
                 <div class="row">
@@ -144,16 +146,20 @@ impl Component for App {
                         <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
                     </a>
                 </div>
-    
+
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-    
+
                 // ログインフォームの表示
-                <LoginForm on_login=self.link.callback(|result| result) />
-    
+                <LoginForm on_login=self.login_form_link.callback(|result| result) />
+
                 // メッセージコンポーネントの表示
-                <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
+                <MessageComponent message={ self.message.clone() } />
             </main>
         }
-    }    
-    
+    }
+}
+
+// アプリケーションのエントリーポイント
+fn main() {
+    yew::start_app::<App>();
 }
