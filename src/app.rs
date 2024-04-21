@@ -18,7 +18,7 @@ impl Component for LoginForm {
         LoginForm
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
         match msg {
             () => {
                 let document = window().unwrap().document().unwrap();
@@ -75,7 +75,7 @@ impl Component for MessageComponent {
         MessageComponent
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
         if let Some(message) = msg {
             // ログイン成功時のメッセージを受信
             // メッセージを表示する等の処理を行う
@@ -104,7 +104,7 @@ impl Component for App {
         App
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
         match msg {
             () => {
                 // ログインフォームからのログイン結果を受け取る等の処理を行う
