@@ -60,9 +60,6 @@ pub fn app() -> Html {
                     )
                     .unwrap();
                 };
-                
-                
-                .unwrap();
 
                 let result = wasm_bindgen_futures::JsFuture::from(promise).await;
 
@@ -107,7 +104,7 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
-            <MessageComponent message=login_msg.clone() />
+            <MessageComponent message={login_msg.get().as_ref().map(|s| s.clone()).unwrap_or_default()} />
         </main>
     }
 }
