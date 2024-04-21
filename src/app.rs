@@ -1,125 +1,167 @@
-use js_sys::{Promise, Reflect};
-use serde::{Deserialize, Serialize};
-use wasm_bindgen_futures::*;
-use wasm_bindgen::*;
+use wasm_bindgen::JsCast;
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
 
-#[derive(Serialize, Deserialize)]
-struct LoginResponse {
-    message: String,
+// サーバーからの応答に基づくログイン結果を表す列挙型
+enum LoginResult {
+    Success(String),
+    Failure(String),
 }
 
-#[derive(Serialize, Deserialize)]
-struct LoginArgs {
-    mail: String,
-    pass: String,
+// ログインフォームのコンポーネント
+#[derive(Properties, Clone, PartialEq)]
+struct LoginFormProps {
+    on_login: Callback<LoginResult>,
 }
 
+struct LoginForm {
+    link: ComponentLink<Self>,
+    props: LoginFormProps,
+}
+
+impl Component for LoginForm {
+    type Message = ();
+    type Properties = LoginFormProps;
+
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        LoginForm {
+            link,
+            props,
+        }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            () => {
+                let mail_input = window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .get_element_by_id("login-input")
+                    .unwrap()
+                    .dyn_into::<HtmlInputElement>()
+                    .unwrap();
+                let pass_input = window()
+                    .unwrap()
+                    .document()
+                    .unwrap()
+                    .get_element_by_id("password-input")
+                    .unwrap()
+                    .dyn_into::<HtmlInputElement>()
+                    .unwrap();
+                let mail_value = mail_input.value();
+                let pass_value = pass_input.value();
+
+                // ログイン要求をサーバーに送信（ここではダミーの非同期処理を模擬）
+                let future = async move {
+                    // サーバーとの通信や認証が成功したと仮定
+                    if mail_value == "user@example.com" && pass_value == "password" {
+                        LoginResult::Success("Login successful!".to_string())
+                    } else {
+                        LoginResult::Failure("Login failed!".to_string())
+                    }
+                };
+
+                // 非同期処理の結果を処理
+                self.link.send_future(async move {
+                    match future.await {
+                        LoginResult::Success(msg) => Self::Message::LoginSuccess(msg),
+                        LoginResult::Failure(msg) => Self::Message::LoginFailure(msg),
+                    }
+                });
+            }
+            _ => {}
+        }
+        false
+    }
+
+    fn view(&self) -> Html {
+        html! {
+            <div>
+                <form onsubmit=self.link.callback(|e: FocusEvent| {
+                    e.prevent_default();
+                    ()
+                })>
+                    <label for="login-input">{"Email: "}</label>
+                    <input id="login-input" type="text" />
+
+                    <label for="password-input">{"Password: "}</label>
+                    <input id="password-input" type="password" />
+
+                    <button type="submit">{"Login"}</button>
+                </form>
+            </div>
+        }
+    }
+}
+
+// メッセージコンポーネント
 #[derive(Properties, Clone, PartialEq)]
 struct MessageComponentProps {
     message: String,
 }
 
-#[function_component(MessageComponent)]
 fn message_component(props: &MessageComponentProps) -> Html {
     html! {
         <p><b>{ &props.message }</b></p>
     }
 }
 
-#[function_component(App)]
-pub fn app() -> Html {
-    let login_input_ref = NodeRef::default();
-    let login_msg = use_state(|| String::new());
+// アプリケーションのエントリーポイント
+fn main() {
+    yew::start_app::<App>();
+}
 
-    let on_login_submit = {
-        let login_input_ref = login_input_ref.clone();
-        let login_msg = login_msg.clone();
-        Callback::from(move |e: yew::events::SubmitEvent| {
-            e.prevent_default();
+// アプリケーションのコンポーネント
+struct App;
 
-            let login_msg_ref = login_msg.clone();
-            let login_input_ref = login_input_ref.clone();
+impl Component for App {
+    type Message = LoginResult;
+    type Properties = ();
 
-            let future = async move {
-                let mail_value = login_input_ref
-                    .cast::<web_sys::HtmlInputElement>()
-                    .unwrap()
-                    .value();
-                let pass_value = login_input_ref
-                    .cast::<web_sys::HtmlInputElement>()
-                    .unwrap()
-                    .value();
+    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+        App
+    }
 
-                if mail_value.is_empty() || pass_value.is_empty() {
-                    return;
-                }
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            LoginResult::Success(msg) => {
+                // ログイン成功時のメッセージを受信
+                // ここでページの遷移などの処理を行う
+                true // 再描画をトリガー
+            }
+            LoginResult::Failure(msg) => {
+                // ログイン失敗時のメッセージを受信
+                // ここでエラーメッセージを表示などの処理を行う
+                true // 再描画をトリガー
+            }
+        }
+    }
 
-                let login_args = LoginArgs {
-                    mail: mail_value,
-                    pass: pass_value,
-                };
+    fn view(&self) -> Html {
+        html! {
+            <main class="container">
+                <div class="row">
+                    <a href="https://">
+                        <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
+                    </a>
+                    <a href="https://">
+                        <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
+                    </a>
+                    <a href="https://">
+                        <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
+                    </a>
+                </div>
 
-                let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
-                let window = web_sys::window().unwrap();
-                let invoke_function = Reflect::get(
-                    &JsValue::from(window),
-                    &JsValue::from_str("invoke"),
-                )
-                .unwrap()
-                .dyn_into::<js_sys::Function>()
-                .unwrap();
+                <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
-                let apply_args = js_sys::Array::of1(&js_value);
-                let apply_result = invoke_function
-                    .apply(&JsValue::null(), &apply_args)
-                    .unwrap();
-
-                let promise = Promise::from(apply_result);
-                let result = JsFuture::from(promise).await;
-
-                let message = match result {
-                    Ok(js_value) => {
-                        let login_response: Result<LoginResponse, _> =
-                            serde_wasm_bindgen::from_value(js_value);
-                        match login_response {
-                            Ok(response) => response.message,
-                            Err(_) => "Failed to deserialize login response".to_string(),
-                        }
-                    }
-                    Err(_) => "Failed to communicate with server".to_string(),
-                };
-
-                login_msg_ref.set(message);
-            };
-
-            spawn_local(future);
-        })
-    };
-
-    html! {
-        <main class="container">
-            <div class="row">
-                <a href="https://tauri.app" target="_blank">
-                    <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-                </a>
-                <a href="https://yew.rs" target="_blank">
-                    <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
-                </a>
-                <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
-                    <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
-                </a>
-            </div>
-
-            <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
-            <form class="row" onsubmit={on_login_submit}>
-                <input id="login-input" ref={login_input_ref.clone()} placeholder="Your mail address" />
-                <input id="password-input" type="password" placeholder="Password" />
-                <button type="submit">{"Login"}</button>
-            </form>
-
-            <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
-        </main>
+                // ログインフォームの表示
+                <LoginForm on_login=self.link.callback(|result| result) />
+                
+                // メッセージコンポーネントの表示
+                <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
+            </main>
+        }
     }
 }
