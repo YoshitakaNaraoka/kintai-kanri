@@ -1,9 +1,7 @@
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
-use tauri::api::{webview::{WebviewBuilder}, Environment, Content};
-use yew::web_sys::HtmlElement;
+use tauri::api::{webview::WebviewBuilder, Environment, Content};
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -13,7 +11,6 @@ enum LoginResult {
 
 // ログインフォームのコンポーネント
 struct LoginForm {
-    link: ComponentLink<Self>,
     on_login: Callback<LoginResult>, // プロパティを直接定義
 }
 
@@ -26,11 +23,9 @@ impl Component for LoginForm {
     type Message = ();
     type Properties = LoginFormProps;
 
-    // createメソッドのパラメーターを修正
-    fn create(link: ComponentLink<Self>) -> Self {
+    fn create(props: &yew::Context<LoginForm>) -> Self {
         LoginForm {
-            link,
-            on_login: Callback::noop(), // 初期化
+            on_login: props.on_login,
         }
     }
 
@@ -54,11 +49,9 @@ impl Component for LoginForm {
                 };
 
                 // 非同期処理の結果を処理
-                self.link.send_future(async move {
-                    match future.await {
-                        LoginResult::Success(msg) => LoginResult::Success(msg),
-                        LoginResult::Failure(msg) => LoginResult::Failure(msg),
-                    }
+                wasm_bindgen_futures::spawn_local(async move {
+                    let result = future.await;
+                    self.on_login.emit(result);
                 });
             }
         }
@@ -68,7 +61,7 @@ impl Component for LoginForm {
     fn view(&self) -> Html {
         html! {
             <div>
-                <form onsubmit=self.link.callback(|e: FocusEvent| {
+                <form onsubmit=self.on_login.reform(|e: FocusEvent| {
                     e.prevent_default();
                     ()
                 })>
@@ -115,7 +108,6 @@ fn main() {
 
 // アプリケーションのコンポーネント
 struct App {
-    login_form_link: ComponentLink<LoginForm>, // LoginFormに対するリンクを追加
     message: Option<String>, // Option<String>を使ってメッセージを管理
 }
 
@@ -123,10 +115,8 @@ impl Component for App {
     type Message = LoginResult;
     type Properties = ();
 
-    // createメソッドのパラメーターを修正
     fn create(_: Self::Properties) -> Self {
         App {
-            login_form_link: ComponentLink::default(), // リンクを初期化
             message: None, // メッセージを初期化
         }
     }
@@ -147,10 +137,6 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        // LoginFormPropsを作成して、LoginFormコンポーネントに渡す
-        let login_form_props = LoginFormProps {
-            on_login: self.login_form_link.callback(|result| result),
-        };
         html! {
             <main class="container">
                 <div class="row">
@@ -168,7 +154,7 @@ impl Component for App {
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
                 // ログインフォームの表示
-                <LoginForm on_login=self.login_form_link.callback(|result| result) />
+                <LoginForm on_login=self.link.callback(|result| result) />
 
                 // メッセージコンポーネントの表示
                 <MessageComponent message={ self.message.clone() } />
