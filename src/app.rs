@@ -3,38 +3,15 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-pub trait Component {
-    type Message;
-    type Properties;
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self;
-    fn update(&mut self, _: Self::Message) -> ShouldRender;
-    fn view(&self) -> Html;
-}
-
-pub enum ShouldRender {
-    Render,
-    NoRender,
-}
-
-
-
-// サーバーからのレスポンスを受け取る構造体
 #[derive(Serialize, Deserialize)]
 struct LoginResponse {
     message: String,
 }
 
-// ログイン情報を表す構造体
 #[derive(Serialize, Deserialize)]
 struct LoginArgs {
     mail: String,
     pass: String,
-}
-
-// メッセージを表示するコンポーネント
-struct MessageComponent {
-    message: String,
 }
 
 struct MessageComponent {
@@ -43,19 +20,16 @@ struct MessageComponent {
 
 impl Component for MessageComponent {
     type Message = ();
-    type Properties = ();
+    type Properties = String;
 
-    // コンポーネントの初期化
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        MessageComponent { message: String::new() }
+    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+        MessageComponent { message: props }
     }
 
-    // メッセージの更新
     fn update(&mut self, _: Self::Message) -> ShouldRender {
         false
     }
 
-    // 表示の更新
     fn view(&self) -> Html {
         html! {
             <p><b>{ &self.message }</b></p>
@@ -63,36 +37,26 @@ impl Component for MessageComponent {
     }
 }
 
-
-// アプリケーションのエントリーポイント
 #[function_component(App)]
 pub fn app() -> Html {
-    // 入力フィールドの参照を作成
-    let login_input_ref = use_node_ref::<web_sys::HtmlInputElement>();
-
-    // ログインメッセージの状態を管理
+    let login_input_ref = NodeRef::default();
     let login_msg = use_state(|| String::new());
 
-    // ログインのイベントハンドラ
     let on_login_submit = {
         let login_input_ref = login_input_ref.clone();
         let login_msg = login_msg.clone();
         Callback::from(move |e: yew::events::SubmitEvent| {
             e.prevent_default();
 
-            // 入力値の取得
             let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
             let pass_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
 
-            // 空の場合は処理をスキップ
             if mail_value.is_empty() || pass_value.is_empty() {
                 return;
             }
 
-            // ログイン情報を作成
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
-            // ログインリクエストの送信
             spawn_local(async move {
                 match invoke("login", JsValue::from_serde(&login_args).unwrap()).await {
                     Ok(js_value) => {
@@ -124,7 +88,7 @@ pub fn app() -> Html {
             <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
             <form class="row" onsubmit={on_login_submit}>
-                <input id="login-input" ref={login_input_ref} placeholder="Your mail address" />
+                <input id="login-input" ref={login_input_ref.clone()} placeholder="Your mail address" />
                 <input id="password-input" type="password" placeholder="Password" />
                 <button type="submit">{"Login"}</button>
             </form>
