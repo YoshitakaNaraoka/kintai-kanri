@@ -1,6 +1,5 @@
-use js_sys::Reflect::apply;
 use serde::{Deserialize, Serialize};
-
+use wasm_bindgen_futures::*;
 use wasm_bindgen::*;
 use yew::prelude::*;
 
@@ -60,7 +59,7 @@ pub fn app() -> Html {
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
                 let window = web_sys::window().unwrap();
                 let promise = {
-                    let promise = apply(
+                    let promise = &js_sys::apply(
                         &JsValue::from(window),
                         &JsValue::from_str("invoke"),
                         &JsValue::from_str("login"),
@@ -112,7 +111,7 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
-            <MessageComponent message={login_msg.get().map(|s| s.to_string()).unwrap_or_default()} />
+            <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
         </main>
     }
 }
