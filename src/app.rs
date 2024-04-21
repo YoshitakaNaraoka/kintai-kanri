@@ -1,3 +1,4 @@
+use js_sys::{Promise, Reflect};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::*;
 use wasm_bindgen::*;
@@ -58,15 +59,23 @@ pub fn app() -> Html {
             let login_future = async move {
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
                 let window = web_sys::window().unwrap();
-                let promise = {
-                    let promise = &js_sys::apply(
-                        &JsValue::from(window),
-                        &JsValue::from_str("invoke"),
-                        &JsValue::from_str("login"),
-                        &js_sys::Array::of1(&js_value),
-                    );
-                    JsFuture::from(promise)
+                let invoke_function = Reflect::get(
+                    &JsValue::from(window),
+                    &JsValue::from_str("invoke")
+                )
+                .unwrap()
+                .dyn_into::<js_sys::Function>()
+                .unwrap();
+                
+                let apply_args = js_sys::Array::of1(&js_value);
+                let apply_result = invoke_function.apply(&JsValue::null(), &apply_args);
+
+                let promise = match apply_result {
+                    Ok(result) => wasm_bindgen_futures::JsFuture::from(Promise::resolve(&result)),
+                    Err(err) => wasm_bindgen_futures::JsFuture::from(Promise::reject(&err)),
                 };
+
+                
 
                 let result = wasm_bindgen_futures::JsFuture::from(promise).await;
 
