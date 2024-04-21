@@ -1,4 +1,4 @@
-use js_sys::{Reflect, Promise};
+use js_sys::{Promise, Reflect};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::*;
 use wasm_bindgen::*;
@@ -35,28 +35,31 @@ pub fn app() -> Html {
     let on_login_submit = {
         let login_input_ref = login_input_ref.clone();
         let login_msg = login_msg.clone();
-        Callback::from(move |e: SubmitEvent| {
+        Callback::from(move |e: yew::events::SubmitEvent| {
             e.prevent_default();
 
-            let mail_value = login_input_ref
-                .cast::<web_sys::HtmlInputElement>()
-                .unwrap()
-                .value();
-            let pass_value = login_input_ref
-                .cast::<web_sys::HtmlInputElement>()
-                .unwrap()
-                .value();
+            let login_msg_ref = login_msg.clone();
+            let login_input_ref = login_input_ref.clone();
 
-            if mail_value.is_empty() || pass_value.is_empty() {
-                return;
-            }
+            let future = async move {
+                let mail_value = login_input_ref
+                    .cast::<web_sys::HtmlInputElement>()
+                    .unwrap()
+                    .value();
+                let pass_value = login_input_ref
+                    .cast::<web_sys::HtmlInputElement>()
+                    .unwrap()
+                    .value();
 
-            let login_args = LoginArgs {
-                mail: mail_value,
-                pass: pass_value,
-            };
+                if mail_value.is_empty() || pass_value.is_empty() {
+                    return;
+                }
 
-            let login_future = async move {
+                let login_args = LoginArgs {
+                    mail: mail_value,
+                    pass: pass_value,
+                };
+
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
                 let window = web_sys::window().unwrap();
                 let invoke_function = Reflect::get(
@@ -87,10 +90,10 @@ pub fn app() -> Html {
                     Err(_) => "Failed to communicate with server".to_string(),
                 };
 
-                login_msg.set(message);
+                login_msg_ref.set(message);
             };
 
-            spawn_local(login_future);
+            spawn_local(future);
         })
     };
 
