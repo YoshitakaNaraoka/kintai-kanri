@@ -34,22 +34,9 @@ impl Component for LoginForm {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             () => {
-                let mail_input = window()
-                    .unwrap()
-                    .document()
-                    .unwrap()
-                    .get_element_by_id("login-input")
-                    .unwrap()
-                    .dyn_into::<HtmlInputElement>()
-                    .unwrap();
-                let pass_input = window()
-                    .unwrap()
-                    .document()
-                    .unwrap()
-                    .get_element_by_id("password-input")
-                    .unwrap()
-                    .dyn_into::<HtmlInputElement>()
-                    .unwrap();
+                let document = window().unwrap().document().unwrap();
+                let mail_input = document.get_element_by_id("login-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
+                let pass_input = document.get_element_by_id("password-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
                 let mail_value = mail_input.value();
                 let pass_value = pass_input.value();
 
@@ -66,12 +53,11 @@ impl Component for LoginForm {
                 // 非同期処理の結果を処理
                 self.link.send_future(async move {
                     match future.await {
-                        LoginResult::Success(msg) => Self::Message::LoginSuccess(msg),
-                        LoginResult::Failure(msg) => Self::Message::LoginFailure(msg),
+                        LoginResult::Success(msg) => LoginResult::Success(msg),
+                        LoginResult::Failure(msg) => LoginResult::Failure(msg),
                     }
                 });
             }
-            _ => {}
         }
         false
     }
@@ -153,16 +139,16 @@ impl Component for App {
                         <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
                     </a>
                 </div>
-    
+
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-    
+
                 // ログインフォームの表示
                 <LoginForm on_login=self.link.callback(|result| result) />
-    
+                
                 // メッセージコンポーネントの表示
-                <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
+                // <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
             </main>
         }
-    }
+    }    
     
 }
