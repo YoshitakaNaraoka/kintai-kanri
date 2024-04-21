@@ -1,16 +1,24 @@
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use wasm_bindgen::prelude::*;
 
+#[derive(Serialize, Deserialize)]
+struct LoginResponse {
+    message: String,
+}
 
-// MessageComponent用のプロパティ型
+#[derive(Serialize, Deserialize)]
+struct LoginArgs {
+    mail: String,
+    pass: String,
+}
+
 #[derive(Properties, Clone, PartialEq)]
 struct MessageComponentProps {
     message: String,
 }
 
-// メッセージを表示するコンポーネント
 #[function_component(MessageComponent)]
 fn message_component(props: &MessageComponentProps) -> Html {
     html! {
@@ -31,7 +39,7 @@ pub fn app() -> Html {
 
             let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
             let pass_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
-
+            
             if mail_value.is_empty() || pass_value.is_empty() {
                 return;
             }
@@ -39,16 +47,22 @@ pub fn app() -> Html {
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
             let login_future = async move {
-                match invoke("login", JsValue::from_serde(&login_args).unwrap()).await {
-                    Ok(js_value) => {
-                        let login_response: LoginResponse = js_value.into_serde().unwrap();
-                        login_msg.set(login_response.message);
-                    },
+                let js_value = match invoke("login", JsValue::from_serde(&login_args).unwrap()).await {
+                    Ok(value) => value,
                     Err(_) => {
                         login_msg.set("Failed to communicate with server".to_string());
+                        return;
                     }
+                };
+            
+                let login_response: Result<LoginResponse, _> = js_value.into_serde();
+                if let Ok(login_response) = login_response {
+                    login_msg.set(login_response.message);
+                } else {
+                    login_msg.set("Failed to communicate with server".to_string());
                 }
             };
+            
             spawn_local(login_future);
         })
     };
@@ -75,7 +89,6 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
-            // MessageComponentにPropsを渡す
             <MessageComponent message=login_msg.clone() />
         </main>
     }
