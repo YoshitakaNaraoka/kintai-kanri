@@ -4,17 +4,6 @@ use yew::prelude::*;
 use wasm_bindgen::prelude::*;
 
 
-#[derive(Serialize, Deserialize)]
-struct LoginResponse {
-    message: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct LoginArgs {
-    mail: String,
-    pass: String,
-}
-
 // MessageComponent用のプロパティ型
 #[derive(Properties, Clone, PartialEq)]
 struct MessageComponentProps {
@@ -29,11 +18,10 @@ fn message_component(props: &MessageComponentProps) -> Html {
     }
 }
 
-
 #[function_component(App)]
 pub fn app() -> Html {
     let login_input_ref = NodeRef::default();
-    let login_msg = use_state(String::new);
+    let login_msg = use_state(|| String::new());
 
     let on_login_submit = {
         let login_input_ref = login_input_ref.clone();
@@ -51,20 +39,13 @@ pub fn app() -> Html {
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
             let login_future = async move {
-                match serde_wasm_bindgen::to_value(&login_args) {
+                match invoke("login", JsValue::from_serde(&login_args).unwrap()).await {
                     Ok(js_value) => {
-                        match invoke("login", &js_value).await {
-                            Ok(js_value) => {
-                                let login_response: LoginResponse = js_value.into_serde().unwrap();
-                                login_msg.set(login_response.message);
-                            },
-                            Err(_) => {
-                                login_msg.set("Failed to communicate with server".to_string());
-                            }
-                        }
+                        let login_response: LoginResponse = js_value.into_serde().unwrap();
+                        login_msg.set(login_response.message);
                     },
                     Err(_) => {
-                        login_msg.set("Failed to serialize login arguments".to_string());
+                        login_msg.set("Failed to communicate with server".to_string());
                     }
                 }
             };
@@ -94,7 +75,7 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
-            // MessageComponentを呼び出す際にPropsを渡す
+            // MessageComponentにPropsを渡す
             <MessageComponent message=login_msg.clone() />
         </main>
     }
