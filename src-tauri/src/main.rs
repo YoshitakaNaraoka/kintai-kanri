@@ -3,7 +3,7 @@
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![login,logout,show_ui])
+        .invoke_handler(tauri::generate_handler![login, logout, show_ui])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
