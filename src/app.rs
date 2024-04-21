@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::*;
+
+
 use yew::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -49,12 +49,18 @@ pub fn app() -> Html {
             let login_future = async move {
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
                 let window = web_sys::window().unwrap();
-                let promise = Reflect::apply(
-                    &JsValue::from(window),
-                    &JsValue::from_str("invoke"),
-                    &JsValue::from(window),
-                    &js_sys::Array::from(&[&JsValue::from_str("login"), &js_value]),
-                )
+                let login_future = async move {
+                    let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
+                    let window = web_sys::window().unwrap();
+                    let promise = Reflect::apply(
+                        &JsValue::from(window),
+                        &JsValue::from_str("invoke"),
+                        &JsValue::from_str("login"),
+                        &js_sys::Array::from(&[&js_value]),
+                    )
+                    .unwrap();
+                };
+                
                 
                 .unwrap();
 
