@@ -1,8 +1,5 @@
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response};
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -28,9 +25,6 @@ fn message_component(props: &MessageComponentProps) -> Html {
     }
 }
 
-#[derive(Properties, Clone, PartialEq)]
-struct AppProps {}
-
 #[function_component(App)]
 pub fn app() -> Html {
     let login_input_ref = NodeRef::default();
@@ -52,10 +46,26 @@ pub fn app() -> Html {
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
             let login_future = async move {
-                match send_login_request(&login_args).await {
+                let js_value = match serde_wasm_bindgen::to_value(&login_args) {
+                    Ok(value) => value,
+                    Err(_) => {
+                        login_msg.set("Failed to serialize login data".to_string());
+                        return;
+                    }
+                };
+
+                match wasm_bindgen_futures::JsFuture::from(invoke("login", &js_value)).await {
                     Ok(js_value) => {
-                        handle_login_response(js_value, &login_msg).await;
-                    },
+                        let login_response: Result<LoginResponse, _> = js_value.into_serde();
+                        match login_response {
+                            Ok(login_response) => {
+                                login_msg.set(login_response.message);
+                            }
+                            Err(_) => {
+                                login_msg.set("Failed to deserialize login response".to_string());
+                            }
+                        }
+                    }
                     Err(_) => {
                         login_msg.set("Failed to communicate with server".to_string());
                     }
@@ -90,35 +100,5 @@ pub fn app() -> Html {
 
             <MessageComponent message=login_msg.clone() />
         </main>
-    }
-}
-
-async fn send_login_request(login_args: &LoginArgs) -> Result<JsValue, JsValue> {
-    let mut opts = RequestInit::new();
-    opts.method("POST");
-    opts.mode(RequestMode::Cors);
-
-    let body = serde_wasm_bindgen::to_value(login_args)?;
-
-    let request = Request::new_with_str_and_init("/login", &opts)?;
-    request.headers().set("Content-Type", "application/json")?;
-    request.body(Some(&body.into()))?;
-
-    let resp_value = JsFuture::from(window().unwrap().fetch_with_request(&request)).await?;
-    let resp: Response = resp_value.dyn_into().expect("not a Response");
-    let resp_json = JsFuture::from(resp.json()?).await?;
-
-    Ok(resp_json)
-}
-
-async fn handle_login_response(js_value: JsValue, login_msg: &Callback<String>) {
-    let login_response: Result<LoginResponse, _> = js_value.into_serde();
-    match login_response {
-        Ok(login_response) => {
-            login_msg.emit(login_response.message);
-        }
-        Err(_) => {
-            login_msg.emit("Failed to communicate with server".to_string());
-        }
     }
 }
