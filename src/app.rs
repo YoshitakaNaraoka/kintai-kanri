@@ -49,32 +49,29 @@ pub fn app() -> Html {
 
             let login_future = async move {
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
-                let promise = apply(
-                    window().unwrap(),
-                    from_str("invoke"),
-                    from_str("login"),
-                    from(&[&js_value]),
+                let promise = js_sys::Reflect::apply(
+                    &web_sys::window().unwrap(),
+                    &JsValue::from_str("invoke"),
+                    &JsValue::from_str("login"),
+                    &js_sys::Array::from(&[&js_value]),
                 )
                 .unwrap();
-                let result = from(promise).await;
-
-                match result {
+            
+                let result = wasm_bindgen_futures::JsFuture::from(promise).await;
+            
+                let message = match result {
                     Ok(js_value) => {
-                        let login_response: Result<LoginResponse, _> = js_value.into_serde();
-                        match login_response {
-                            Ok(login_response) => {
-                                login_msg.set(login_response.message);
-                            }
-                            Err(_) => {
-                                login_msg.set("Failed to deserialize login response".to_string());
-                            }
-                        }
+                        js_value.into_serde::<LoginResponse>()
+                            .map(|response| response.message)
+                            .unwrap_or_else(|_| "Failed to deserialize login response".to_string())
                     }
-                    Err(_) => {
-                        login_msg.set("Failed to communicate with server".to_string());
-                    }
-                }
+                    Err(_) => "Failed to communicate with server".to_string(),
+                };
+            
+                login_msg.set(message);
             };
+            
+            
             
             spawn_local(login_future);
         })
@@ -105,9 +102,4 @@ pub fn app() -> Html {
             <MessageComponent message=login_msg.clone() />
         </main>
     }
-}
-
-#[wasm_bindgen(start)]
-pub fn run_app() {
-    yew::start_app::<App>();
 }
