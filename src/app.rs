@@ -1,4 +1,3 @@
-use js_sys::Reflect::*;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::*;
@@ -40,7 +39,7 @@ pub fn app() -> Html {
 
             let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
             let pass_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
-            
+
             if mail_value.is_empty() || pass_value.is_empty() {
                 return;
             }
@@ -49,30 +48,33 @@ pub fn app() -> Html {
 
             let login_future = async move {
                 let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
-                let promise = js_sys::Reflect::apply(
-                    &web_sys::window().unwrap(),
+                let window = web_sys::window().unwrap();
+                let promise = Reflect::apply(
+                    &JsValue::from(window),
                     &JsValue::from_str("invoke"),
-                    &JsValue::from_str("login"),
-                    &js_sys::Array::from(&[&js_value]),
+                    &JsValue::from(window),
+                    &js_sys::Array::from(&[&JsValue::from_str("login"), &js_value]),
                 )
+                
                 .unwrap();
-            
+
                 let result = wasm_bindgen_futures::JsFuture::from(promise).await;
-            
+
                 let message = match result {
                     Ok(js_value) => {
-                        js_value.into_serde::<LoginResponse>()
-                            .map(|response| response.message)
-                            .unwrap_or_else(|_| "Failed to deserialize login response".to_string())
+                        let login_response: Result<LoginResponse, _> = serde_wasm_bindgen::from_value(js_value);
+                        match login_response {
+                            Ok(response) => response.message,
+                            Err(_) => "Failed to deserialize login response".to_string(),
+                        }
                     }
                     Err(_) => "Failed to communicate with server".to_string(),
                 };
-            
+                
+
                 login_msg.set(message);
             };
-            
-            
-            
+
             spawn_local(login_future);
         })
     };
