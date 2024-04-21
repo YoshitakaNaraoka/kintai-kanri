@@ -54,10 +54,10 @@ impl Component for LoginForm {
                 <form onsubmit=|e: FocusEvent| { e.prevent_default(); }>
                     <label for="login-input">{"Email: "}</label>
                     <input id="login-input" type="text" />
-
+    
                     <label for="password-input">{"Password: "}</label>
                     <input id="password-input" type="password" />
-
+    
                     <button type="submit">{"Login"}</button>
                 </form>
             </div>
@@ -95,7 +95,7 @@ impl Component for MessageComponent {
 }
 
 // アプリケーションのコンポーネント
-struct App;
+pub(crate) struct App;
 
 impl Component for App {
     type Message = ();
