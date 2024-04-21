@@ -1,4 +1,5 @@
-use web_sys::{window, HtmlInputElement};
+use wasm_bindgen::JsCast;
+use web_sys::{window, Element, HtmlInputElement};
 use yew::prelude::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
