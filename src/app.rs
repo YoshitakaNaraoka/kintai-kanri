@@ -51,18 +51,19 @@ impl Component for LoginForm {
     fn view(&self) -> Html {
         html! {
             <div>
-                <form onsubmit=|e: FocusEvent| { e.prevent_default(); () }>
+                <form onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
                     <label for="login-input">{"Email: "}</label>
                     <input id="login-input" type="text" />
-
+    
                     <label for="password-input">{"Password: "}</label>
                     <input id="password-input" type="password" />
-
+    
                     <button type="submit">{"Login"}</button>
                 </form>
             </div>
         }
     }
+    
 }
 
 // メッセージコンポーネント
