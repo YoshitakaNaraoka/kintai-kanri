@@ -8,31 +8,7 @@ enum LoginResult {
     Success(String),
     Failure(String),
 }
-// アプリケーションのコンポーネント
-struct App;
 
-impl Component for App {
-    type Message = LoginResult;
-    type Properties = ();
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        App
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            LoginResult::Success(msg) => {
-                // ログイン成功時のメッセージを受信
-                // ここでページの遷移などの処理を行う
-                true // 再描画をトリガー
-            }
-            LoginResult::Failure(msg) => {
-                // ログイン失敗時のメッセージを受信
-                // ここでエラーメッセージを表示などの処理を行う
-                true // 再描画をトリガー
-            }
-        }
-    }
 // ログインフォームのコンポーネント
 struct LoginForm {
     link: ComponentLink<Self>,
@@ -42,8 +18,6 @@ struct LoginForm {
 #[derive(Properties, Clone, PartialEq)]
 struct LoginFormProps {
     on_login: Callback<LoginResult>,
-    // LoginFormPropsにComponentLinkを含める
-    link: ComponentLink<LoginForm>,
 }
 
 impl Component for LoginForm {
@@ -125,13 +99,36 @@ fn main() {
     yew::start_app::<App>();
 }
 
+// アプリケーションのコンポーネント
+struct App;
 
+impl Component for App {
+    type Message = LoginResult;
+    type Properties = ();
+
+    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+        App
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            LoginResult::Success(msg) => {
+                // ログイン成功時のメッセージを受信
+                // ここでページの遷移などの処理を行う
+                true // 再描画をトリガー
+            }
+            LoginResult::Failure(msg) => {
+                // ログイン失敗時のメッセージを受信
+                // ここでエラーメッセージを表示などの処理を行う
+                true // 再描画をトリガー
+            }
+        }
+    }
 
     fn view(&self) -> Html {
         // LoginFormPropsを作成して、LoginFormコンポーネントに渡す
         let login_form_props = LoginFormProps {
             on_login: self.link.callback(|result| result),
-            link: self.link.clone(),
         };
 
         html! {
@@ -151,7 +148,7 @@ fn main() {
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
     
                 // ログインフォームの表示
-                <LoginForm on_login=self.link.callback(|result| result) link=self.link.clone() />
+                <LoginForm on_login=self.link.callback(|result| result) />
     
                 // メッセージコンポーネントの表示
                 <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
