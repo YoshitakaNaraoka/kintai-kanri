@@ -2,6 +2,8 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
+use tauri::api::{webview::{WebviewBuilder}, Environment, Content};
+use yew::web_sys::HtmlElement;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -97,6 +99,17 @@ fn message_component(props: &MessageComponentProps) -> Html {
 
 // アプリケーションのエントリーポイント
 fn main() {
+    let environment = Environment::builder().build().unwrap(); // Tauriの環境を設定
+    let webview = WebviewBuilder::new(environment) // TauriのWebViewを構築
+        .title("Tauri Yew App")
+        .content(Content::Html(include_str!("index.html")))
+        .size(800, 600)
+        .resizable(true)
+        .debug(true)
+        .build()
+        .unwrap(); // WebViewのビルド
+    let mut runtime = webview2::Runtime::new().unwrap();
+    runtime.run(); // WebViewのランタイムを実行
     yew::start_app::<App>();
 }
 
@@ -138,7 +151,6 @@ impl Component for App {
         let login_form_props = LoginFormProps {
             on_login: self.login_form_link.callback(|result| result),
         };
-    fn view(&self) -> Html {
         html! {
             <main class="container">
                 <div class="row">
@@ -163,20 +175,4 @@ impl Component for App {
             </main>
         }
     }
-}
-
-// アプリケーションのエントリーポイント
-fn main() {
-    let environment = Environment::builder().build().unwrap();
-    let webview = WebviewBuilder::new(environment)
-        .title("Tauri Yew App")
-        .content(Content::Html(include_str!("index.html")))
-        .size(800, 600)
-        .resizable(true)
-        .debug(true)
-        .build()
-        .unwrap();
-    let mut runtime = webview2::Runtime::new().unwrap();
-    runtime.run();
-    yew::start_app::<App>();
 }
