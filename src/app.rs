@@ -1,5 +1,5 @@
 use wasm_bindgen::JsCast;
-use web_sys::{window, Element, HtmlInputElement};
+use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
@@ -19,7 +19,7 @@ impl Component for LoginForm {
         LoginForm
     }
 
-    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
+    fn update(&mut self, _: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             () => {
                 let document = window().unwrap().document().unwrap();
@@ -77,7 +77,7 @@ impl Component for MessageComponent {
         MessageComponent
     }
 
-    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
+    fn update(&mut self, _: &yew::Context<Self>, msg: Self::Message) -> bool {
         if let Some(message) = msg {
             // ログイン成功時のメッセージを受信
             // メッセージを表示する等の処理を行う
@@ -88,7 +88,7 @@ impl Component for MessageComponent {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <p>{"Message Component"}</p>
         }
@@ -106,7 +106,7 @@ impl Component for App {
         App
     }
 
-    fn update(&mut self, msg: Self::Message, _: &Self::Properties) -> ShouldRender {
+    fn update(&mut self, _: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             () => {
                 // ログインフォームからのログイン結果を受け取る等の処理を行う
@@ -115,7 +115,7 @@ impl Component for App {
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <main>
                 // ログインフォームの表示
