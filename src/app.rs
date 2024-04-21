@@ -1,5 +1,7 @@
+use js_sys::Reflect::*;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen_futures::spawn_local;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::*;
 use yew::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -46,15 +48,17 @@ pub fn app() -> Html {
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
             let login_future = async move {
-                let js_value = match serde_wasm_bindgen::to_value(&login_args) {
-                    Ok(value) => value,
-                    Err(_) => {
-                        login_msg.set("Failed to serialize login data".to_string());
-                        return;
-                    }
-                };
+                let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
+                let promise = apply(
+                    window().unwrap(),
+                    from_str("invoke"),
+                    from_str("login"),
+                    from(&[&js_value]),
+                )
+                .unwrap();
+                let result = from(promise).await;
 
-                match wasm_bindgen_futures::JsFuture::from(invoke("login", &js_value)).await {
+                match result {
                     Ok(js_value) => {
                         let login_response: Result<LoginResponse, _> = js_value.into_serde();
                         match login_response {
@@ -101,4 +105,9 @@ pub fn app() -> Html {
             <MessageComponent message=login_msg.clone() />
         </main>
     }
+}
+
+#[wasm_bindgen(start)]
+pub fn run_app() {
+    yew::start_app::<App>();
 }
