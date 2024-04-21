@@ -7,6 +7,7 @@ use yew::prelude::*;
 #[derive(Serialize, Deserialize)]
 struct LoginResponse {
     message: String,
+    success: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -75,8 +76,6 @@ pub fn app() -> Html {
                     .apply(&JsValue::null(), &apply_args)
                     .unwrap();
 
-
-
                 let promise = Promise::from(apply_result);
                 let result = JsFuture::from(promise).await;
 
@@ -85,7 +84,17 @@ pub fn app() -> Html {
                         let login_response: Result<LoginResponse, _> =
                             serde_wasm_bindgen::from_value(js_value);
                         match login_response {
-                            Ok(response) => response.message,
+                            Ok(response) => {
+                                if response.success {
+                                    // ログインが成功したらページを遷移させる
+                                    web_sys::window()
+                                        .unwrap()
+                                        .location()
+                                        .assign("ui/hello.html")
+                                        .unwrap();
+                                }
+                                response.message
+                            }
                             Err(_) => "Failed to deserialize login response".to_string(),
                         }
                     }
