@@ -9,197 +9,35 @@ enum LoginResult {
     Failure(String),
 }
 
-// ログインフォームのコンポーネント
-#[derive(Properties, Clone, PartialEq)]
-struct LoginFormProps {
-    on_login: Callback<LoginResult>,
-}
-
-struct LoginForm {
+// アプリケーションのコンポーネント
+struct App {
     link: ComponentLink<Self>,
-    props: LoginFormProps,
+    login_msg: String,
 }
 
-impl Component for LoginForm {
-    type Message = ();
-    type Properties = LoginFormProps;
+impl Component for App {
+    type Message = LoginResult;
+    type Properties = ();
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        LoginForm {
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        App {
             link,
-            props,
+            login_msg: String::new(),
         }
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            () => {
-                let mail_input = window()
-                    .unwrap()
-                    .document()
-                    .unwrap()
-                    .get_element_by_id("login-input")
-                    .unwrap()
-                    .dyn_into::<HtmlInputElement>()
-                    .unwrap();
-                let pass_input = window()
-                    .unwrap()
-                    .document()
-                    .unwrap()
-                    .get_element_by_id("password-input")
-                    .unwrap()
-                    .dyn_into::<HtmlInputElement>()
-                    .unwrap();
-                let mail_value = mail_input.value();
-                let pass_value = pass_input.value();
-
-                // ログイン要求をサーバーに送信（ここではダミーの非同期処理を模擬）
-                let future = async move {
-                    // サーバーとの通信や認証が成功したと仮定
-                    if mail_value == "user@example.com" && pass_value == "password" {
-                        LoginResult::Success("Login successful!".to_string())
-                    } else {
-                        LoginResult::Failure("Login failed!".to_string())
-                    }
-                };
-
-                // 非同期処理の結果を処理
-                self.link.send_future(async move {
-                    match future.await {
-                        LoginResult::Success(msg) => Self::Message::LoginSuccess(msg),
-                        LoginResult::Failure(msg) => Self::Message::LoginFailure(msg),
-                    }
-                });
-            }
-            _ => {}
-        }
-        false
-    }
-
-    fn view(&self) -> Html {
-        html! {
-            <div>
-                <form onsubmit=self.link.callback(|e: FocusEvent| {
-                    e.prevent_default();
-                    ()
-                })>
-                    <label for="login-input">{"Email: "}</label>
-                    <input id="login-input" type="text" />
-
-                    <label for="password-input">{"Password: "}</label>
-                    <input id="password-input" type="password" />
-
-                    <button type="submit">{"Login"}</button>
-                </form>
-            </div>
-        }
-    }
-}
-
-// メッセージコンポーネント
-#[derive(Properties, Clone, PartialEq)]
-struct MessageComponentProps {
-    message: String,
-}
-
-fn message_component(props: &MessageComponentProps) -> Html {
-    html! {
-        <p><b>{ &props.message }</b></p>
-    }
-}
-
-// アプリケーションのエントリーポイント
-fn main() {
-    yew::start_app::<App>();
-}
-
-// アプリケーションのコンポーネント
-struct App;
-
-impl Component for App {
-    type Message = LoginResult;
-    type Properties = ();
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        App
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             LoginResult::Success(msg) => {
                 // ログイン成功時のメッセージを受信
-                // ここでページの遷移などの処理を行う
-                true // 再描画をトリガー
+                self.login_msg = msg;
             }
             LoginResult::Failure(msg) => {
                 // ログイン失敗時のメッセージを受信
-                // ここでエラーメッセージを表示などの処理を行う
-                true // 再描画をトリガー
+                self.login_msg = msg;
             }
         }
-    }
-
-    fn view(&self) -> Html {
-        html! {
-            <div>
-                <form onsubmit=self.link.callback(|e: FocusEvent| {
-                    e.prevent_default();
-                    ()
-                })>
-                    <label for="login-input">{"Email: "}</label>
-                    <input id="login-input" type="text" />
-
-                    <label for="password-input">{"Password: "}</label>
-                    <input id="password-input" type="password" />
-
-                    <button type="submit">{"Login"}</button>
-                </form>
-            </div>
-        }
-    }
-}
-
-// メッセージコンポーネント
-#[derive(Properties, Clone, PartialEq)]
-struct MessageComponentProps {
-    message: String,
-}
-
-fn message_component(props: &MessageComponentProps) -> Html {
-    html! {
-        <p><b>{ &props.message }</b></p>
-    }
-}
-
-// アプリケーションのエントリーポイント
-fn main() {
-    yew::start_app::<App>();
-}
-
-// アプリケーションのコンポーネント
-struct App;
-
-impl Component for App {
-    type Message = LoginResult;
-    type Properties = ();
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        App
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            LoginResult::Success(msg) => {
-                // ログイン成功時のメッセージを受信
-                // ここでページの遷移などの処理を行う
-                true // 再描画をトリガー
-            }
-            LoginResult::Failure(msg) => {
-                // ログイン失敗時のメッセージを受信
-                // ここでエラーメッセージを表示などの処理を行う
-                true // 再描画をトリガー
-            }
-        }
+        true // 再描画をトリガー
     }
 
     fn view(&self) -> Html {
@@ -220,11 +58,29 @@ impl Component for App {
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
                 // ログインフォームの表示
-                <LoginForm on_login=self.link.callback(|result| result) />
+                <div>
+                    <form onsubmit=self.link.callback(|e: FocusEvent| {
+                        e.prevent_default();
+                        LoginResult::Success("Login successful!".to_string())
+                    })>
+                        <label for="login-input">{"Email: "}</label>
+                        <input id="login-input" type="text" />
+
+                        <label for="password-input">{"Password: "}</label>
+                        <input id="password-input" type="password" />
+
+                        <button type="submit">{"Login"}</button>
+                    </form>
+                </div>
                 
                 // メッセージコンポーネントの表示
-                <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
+                <p><b>{ &self.login_msg }</b></p>
             </main>
         }
     }
+}
+
+// アプリのエントリーポイント
+fn main() {
+    yew::start_app::<App>();
 }
