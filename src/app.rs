@@ -18,7 +18,7 @@ impl Component for LoginForm {
         LoginForm
     }
 
-    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             () => {
                 let document = window().unwrap().document().unwrap();
@@ -62,18 +62,6 @@ impl Component for LoginForm {
             </div>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // メッセージコンポーネント
@@ -87,7 +75,7 @@ impl Component for MessageComponent {
         MessageComponent
     }
 
-    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         if let Some(message) = msg {
             // ログイン成功時のメッセージを受信
             // メッセージを表示する等の処理を行う
@@ -103,18 +91,6 @@ impl Component for MessageComponent {
             <p>{"Message Component"}</p>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // アプリケーションのコンポーネント
@@ -128,7 +104,7 @@ impl Component for App {
         App
     }
 
-    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             () => {
                 // ログインフォームからのログイン結果を受け取る等の処理を行う
@@ -148,16 +124,4 @@ impl Component for App {
             </main>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
