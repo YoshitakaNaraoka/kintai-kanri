@@ -1,6 +1,4 @@
-use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{window, HtmlInputElement};
+use webview2::{Environment, WebviewBuilder};
 use yew::prelude::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
@@ -33,15 +31,11 @@ impl Component for LoginForm {
     }
 
     fn update(&mut self, _: Self::Message) -> ShouldRender {
-        let document = window().unwrap().document().unwrap();
-        let mail_input = document.get_element_by_id("login-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
-        let pass_input = document.get_element_by_id("password-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
-        let mail_value = mail_input.value();
-        let pass_value = pass_input.value();
-
         // ログイン要求をサーバーに送信（ここではダミーの非同期処理を模擬）
-        let future = async move {
+        let future = async {
             // サーバーとの通信や認証が成功したと仮定
+            let mail_value = "user@example.com"; // 仮の値
+            let pass_value = "password"; // 仮の値
             if mail_value == "user@example.com" && pass_value == "password" {
                 LoginResult::Success("Login successful!".to_string())
             } else {
@@ -50,12 +44,12 @@ impl Component for LoginForm {
         };
 
         // 非同期処理の結果を処理
-        self.link.send_future(async move {
+        async {
             match future.await {
-                LoginResult::Success(msg) => LoginResult::Success(msg),
-                LoginResult::Failure(msg) => LoginResult::Failure(msg),
+                LoginResult::Success(msg) => self.on_login.emit(LoginResult::Success(msg)),
+                LoginResult::Failure(msg) => self.on_login.emit(LoginResult::Failure(msg)),
             }
-        });
+        };
 
         false
     }
@@ -161,5 +155,16 @@ impl Component for App {
 
 // アプリケーションのエントリーポイント
 fn main() {
+    let environment = Environment::builder().build().unwrap();
+    let webview = WebviewBuilder::new(environment)
+        .title("Tauri Yew App")
+        .content(Content::Html(include_str!("index.html")))
+        .size(800, 600)
+        .resizable(true)
+        .debug(true)
+        .build()
+        .unwrap();
+    let mut runtime = webview2::Runtime::new().unwrap();
+    runtime.run();
     yew::start_app::<App>();
 }
