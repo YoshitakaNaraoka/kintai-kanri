@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
@@ -19,59 +18,32 @@ struct LoginArgs<'a> {
 #[function_component(App)]
 pub fn app() -> Html {
     let login_input_ref = use_node_ref();
-    let mail = use_state(|| String::new());
-    let login_msg = use_state(|| String::new());
-
-    {
-        let login_msg = login_msg.clone();
-        let mail = mail.clone();
-        let pass = mail.clone(); // str の中身は一つのものを.clone()で使いまわせる
-        use_effect_with(mail.clone(), move |_| {
-            spawn_local(async move {
-                if mail.is_empty() {
-                    return;
-                }
-
-                if pass.is_empty() {
-                    return;
-                }
-
-                let args = to_value(&LoginArgs {
-                    mail: &mail,
-                    pass: &pass,
-                })
-                .unwrap();
-                // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-                let new_msg = invoke("login", args).await.as_string().unwrap();
-                login_msg.set(new_msg);
-            });
-
-            || {}
-        });
-    }
+    let mail = use_state(String::new);
+    let login_msg = use_state(String::new);
 
     let login = {
-        let mail = mail.clone();
-        let pass = mail.clone();
         let login_input_ref = login_input_ref.clone();
-        Callback::from(move |e: SubmitEvent| {
+        let login_msg = login_msg.clone();
+        Callback::from(move |e: &SubmitEvent| {
             e.prevent_default();
-            mail.set(
-                login_input_ref
-                    .cast::<web_sys::HtmlInputElement>()
-                    .unwrap()
-                    .value(),
-            );
-
-            pass.set(
-                login_input_ref
-                    .cast::<web_sys::HtmlInputElement>()
-                    .unwrap()
-                    .value(),
-            );
+            let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
+            let pass_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
+            if mail_value.is_empty() || pass_value.is_empty() {
+                return;
+            }
+    
+            let args = serde_wasm_bindgen::to_value(&LoginArgs {
+                mail: &mail_value,
+                pass: &pass_value,
+            }).unwrap();
+            
+            spawn_local(async move {
+                let new_msg = invoke("login", args).await.as_string().unwrap_or_else(|| String::from(""));
+                login_msg.set(new_msg);
+            });
         })
     };
-
+    
     html! {
         <main class="container">
             <div class="row">
@@ -88,9 +60,9 @@ pub fn app() -> Html {
 
             <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
-            <form class="row" onsubmit={login}>
+            <form class="row" onsubmit={Callback::from(on_login_submit)}>
                 <input id="login-input" ref={&login_input_ref} placeholder="Your mail address" />
-                <input id="login-input" ref={&login_input_ref} placeholder="Password" /> // 参照がいる
+                <input id="login-input" ref={&login_input_ref} placeholder="Password" />
                 <button type="submit">{"Login"}</button>
             </form>
 
