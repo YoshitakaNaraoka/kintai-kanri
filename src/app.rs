@@ -14,26 +14,34 @@ struct LoginArgs {
     pass: String,
 }
 
-struct MessageComponent {
+// MessageComponent用のプロパティ型
+struct MessageComponentProps {
     message: String,
 }
 
-impl Component for MessageComponent {
-    type Message = ();
-    type Properties = String;
+// MessageComponent用のプロパティ型
+#[derive(Properties, PartialEq)] // PropertiesとPartialEqを自動導出する
+struct MessageComponentProps {
+    message: String,
+}
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-        MessageComponent { message: props }
+
+impl Properties for MessageComponentProps {
+    // プロパティ型として適切なコンポーネントを指定
+    type Builder = ();
+    
+    fn builder() -> Self::Builder {
+        
     }
+}
 
-    fn update(&mut self, _: Self::Message) -> ShouldRender {
-        false
-    }
 
-    fn view(&self) -> Html {
-        html! {
-            <p><b>{ &self.message }</b></p>
-        }
+
+// メッセージを表示するコンポーネント
+#[function_component(MessageComponent)]
+fn message_component(props: &MessageComponentProps) -> Html {
+    html! {
+        <p><b>{ &props.message }</b></p>
     }
 }
 
@@ -57,7 +65,7 @@ pub fn app() -> Html {
 
             let login_args = LoginArgs { mail: mail_value, pass: pass_value };
 
-            spawn_local(async move {
+            let login_future = async move {
                 match invoke("login", JsValue::from_serde(&login_args).unwrap()).await {
                     Ok(js_value) => {
                         let login_response: LoginResponse = js_value.into_serde().unwrap();
@@ -67,7 +75,8 @@ pub fn app() -> Html {
                         login_msg.set("Failed to communicate with server".to_string());
                     }
                 }
-            });
+            };
+            spawn_local(login_future);
         })
     };
 
@@ -93,6 +102,7 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
+            // MessageComponentを呼び出す際にPropsを渡す
             <MessageComponent message=&login_msg />
         </main>
     }
