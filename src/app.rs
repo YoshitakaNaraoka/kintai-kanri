@@ -71,10 +71,11 @@ pub fn app() -> Html {
                 .unwrap();
 
                 let apply_args = js_sys::Array::of1(&js_value);
-                let window_clone = window.clone();
                 let apply_result = invoke_function
-                    .apply(&JsValue::from(window_clone), &apply_args)
+                    .apply(&JsValue::null(), &apply_args)
                     .unwrap();
+
+
 
                 let promise = Promise::from(apply_result);
                 let result = JsFuture::from(promise).await;
