@@ -48,7 +48,7 @@ impl Component for LoginForm {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div>
                 <form onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
