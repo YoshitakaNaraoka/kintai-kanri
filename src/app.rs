@@ -1,3 +1,4 @@
+use wasm_bindgen::JsCast;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
 
@@ -8,14 +9,18 @@ enum LoginResult {
 }
 
 // ログインフォームのコンポーネント
-struct LoginForm;
+struct LoginForm {
+    on_login: Callback<LoginResult>,
+}
 
 impl Component for LoginForm {
     type Message = ();
     type Properties = ();
 
     fn create(_: &yew::Context<Self>) -> Self {
-        LoginForm
+        LoginForm {
+            on_login: Callback::noop(),
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -40,7 +45,7 @@ impl Component for LoginForm {
                 // 非同期処理の結果を処理
                 wasm_bindgen_futures::spawn_local(async move {
                     let result = future.await;
-                    yew::Callback::noop().emit(result);
+                    self.on_login.emit(result);
                 });
             }
         }
@@ -68,7 +73,7 @@ impl Component for LoginForm {
 struct MessageComponent;
 
 impl Component for MessageComponent {
-    type Message = Option<String>;
+    type Message = LoginResult;
     type Properties = ();
 
     fn create(_: &yew::Context<Self>) -> Self {
@@ -76,14 +81,18 @@ impl Component for MessageComponent {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        if let Some(message) = msg {
-            // ログイン成功時のメッセージを受信
-            // メッセージを表示する等の処理を行う
-        } else {
-            // ログイン失敗時のメッセージを受信
-            // エラーメッセージを表示する等の処理を行う
+        match msg {
+            LoginResult::Success(msg) => {
+                // ログイン成功時のメッセージを受信
+                // メッセージを表示する等の処理を行う
+                true
+            }
+            LoginResult::Failure(msg) => {
+                // ログイン失敗時のメッセージを受信
+                // エラーメッセージを表示する等の処理を行う
+                true
+            }
         }
-        false
     }
 
     fn view(&self) -> Html {
@@ -97,7 +106,7 @@ impl Component for MessageComponent {
 struct App;
 
 impl Component for App {
-    type Message = LoginResult;
+    type Message = ();
     type Properties = ();
 
     fn create(_: &yew::Context<Self>) -> Self {
@@ -106,14 +115,8 @@ impl Component for App {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            LoginResult::Success(msg) => {
-                // ログイン成功時のメッセージを受信
-                // メッセージコンポーネントに渡す等の処理を行う
-                true
-            }
-            LoginResult::Failure(msg) => {
-                // ログイン失敗時のメッセージを受信
-                // メッセージコンポーネントに渡す等の処理を行う
+            () => {
+                // ログインフォームからのログイン結果を受け取る等の処理を行う
                 true
             }
         }
@@ -124,7 +127,7 @@ impl Component for App {
             <main>
                 // ログインフォームの表示
                 <LoginForm />
-                
+
                 // メッセージコンポーネントの表示
                 <MessageComponent />
             </main>
