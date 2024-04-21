@@ -1,6 +1,9 @@
+
+use js_sys::Reflect::apply;
 use serde::{Deserialize, Serialize};
 
 
+use wasm_bindgen::*;
 use yew::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -34,7 +37,7 @@ pub fn app() -> Html {
     let on_login_submit = {
         let login_input_ref = login_input_ref.clone();
         let login_msg = login_msg.clone();
-        Callback::from(move |e: yew::events::SubmitEvent| {
+        Callback::from(move |e: yew::events::SubmitEvent| (
             e.prevent_default();
 
             let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
@@ -52,14 +55,16 @@ pub fn app() -> Html {
                 let login_future = async move {
                     let js_value = serde_wasm_bindgen::to_value(&login_args).unwrap();
                     let window = web_sys::window().unwrap();
-                    let promise = Reflect::apply(
-                        &JsValue::from(window),
-                        &JsValue::from_str("invoke"),
-                        &JsValue::from_str("login"),
-                        &js_sys::Array::from(&[&js_value]),
-                    )
-                    .unwrap();
-                };
+                    let promise = {
+                        let promise = apply(
+                            &JsValue::from(window),
+                            &JsValue::from_str("invoke"),
+                            &JsValue::from_str("login"),
+                            &js_sys::Array::of1(&js_value),
+                        );
+                        JsFuture::from(promise)
+                    };
+        )
 
                 let result = wasm_bindgen_futures::JsFuture::from(promise).await;
 
@@ -104,7 +109,11 @@ pub fn app() -> Html {
                 <button type="submit">{"Login"}</button>
             </form>
 
-            <MessageComponent message={login_msg.get().as_ref().map(|s| s.clone()).unwrap_or_default()} />
+            <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
+
+
+
+
         </main>
     }
 }
