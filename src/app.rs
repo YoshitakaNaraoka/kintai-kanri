@@ -95,7 +95,7 @@ fn main() {
     let environment = Environment::builder().build().unwrap(); // Tauriの環境を設定
     let webview = WebviewBuilder::new(environment) // TauriのWebViewを構築
         .title("Tauri Yew App")
-        .content(Content::Html(include_str!("index.html")))
+        .content(Content::Html(include_str!("hello.html")))
         .size(800, 600)
         .resizable(true)
         .debug(true)
