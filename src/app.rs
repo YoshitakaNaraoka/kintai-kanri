@@ -35,7 +35,7 @@ pub fn app() -> Html {
     let on_login_submit = {
         let login_input_ref = login_input_ref.clone();
         let login_msg = login_msg.clone();
-        Callback::from(move |e: yew::events::SubmitEvent| {
+        Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
 
             let mail_value = login_input_ref
