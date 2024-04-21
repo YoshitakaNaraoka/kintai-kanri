@@ -76,6 +76,18 @@ impl Component for LoginForm {
             </div>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // メッセージコンポーネント
@@ -90,22 +102,6 @@ fn message_component(props: &MessageComponentProps) -> Html {
     }
 }
 
-// アプリケーションのエントリーポイント
-fn main() {
-    let environment = Environment::builder().build().unwrap(); // Tauriの環境を設定
-    let webview = WebviewBuilder::new(environment) // TauriのWebViewを構築
-        .title("Tauri Yew App")
-        .content(Content::Html(include_str!("hello.html")))
-        .size(800, 600)
-        .resizable(true)
-        .debug(true)
-        .build()
-        .unwrap(); // WebViewのビルド
-    let mut runtime = webview2::Runtime::new().unwrap();
-    runtime.run(); // WebViewのランタイムを実行
-    yew::start_app::<App>();
-}
-
 // アプリケーションのコンポーネント
 struct App {
     message: Option<String>, // Option<String>を使ってメッセージを管理
@@ -115,7 +111,7 @@ impl Component for App {
     type Message = LoginResult;
     type Properties = ();
 
-    fn create(_: Self::Properties) -> Self {
+    fn create(_: &yew::Context<App>) -> Self {
         App {
             message: None, // メッセージを初期化
         }
@@ -161,4 +157,16 @@ impl Component for App {
             </main>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
