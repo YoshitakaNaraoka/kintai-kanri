@@ -1,4 +1,3 @@
-use wasm_bindgen::JsCast;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
 
@@ -9,21 +8,17 @@ enum LoginResult {
 }
 
 // ログインフォームのコンポーネント
-struct LoginForm {
-    on_login: Callback<LoginResult>,
-}
+struct LoginForm;
 
 impl Component for LoginForm {
     type Message = ();
     type Properties = ();
 
     fn create(_: &yew::Context<Self>) -> Self {
-        LoginForm {
-            on_login: Callback::noop(),
-        }
+        LoginForm
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
         match msg {
             () => {
                 let document = window().unwrap().document().unwrap();
@@ -45,7 +40,7 @@ impl Component for LoginForm {
                 // 非同期処理の結果を処理
                 wasm_bindgen_futures::spawn_local(async move {
                     let result = future.await;
-                    self.on_login.emit(result);
+                    yew::Callback::noop().emit(result);
                 });
             }
         }
@@ -67,32 +62,40 @@ impl Component for LoginForm {
             </div>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // メッセージコンポーネント
 struct MessageComponent;
 
 impl Component for MessageComponent {
-    type Message = LoginResult;
+    type Message = Option<String>;
     type Properties = ();
 
     fn create(_: &yew::Context<Self>) -> Self {
         MessageComponent
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            LoginResult::Success(msg) => {
-                // ログイン成功時のメッセージを受信
-                // メッセージを表示する等の処理を行う
-                true
-            }
-            LoginResult::Failure(msg) => {
-                // ログイン失敗時のメッセージを受信
-                // エラーメッセージを表示する等の処理を行う
-                true
-            }
+    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
+        if let Some(message) = msg {
+            // ログイン成功時のメッセージを受信
+            // メッセージを表示する等の処理を行う
+        } else {
+            // ログイン失敗時のメッセージを受信
+            // エラーメッセージを表示する等の処理を行う
         }
+        false
     }
 
     fn view(&self) -> Html {
@@ -100,6 +103,18 @@ impl Component for MessageComponent {
             <p>{"Message Component"}</p>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // アプリケーションのコンポーネント
@@ -113,7 +128,7 @@ impl Component for App {
         App
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> yew::html::ShouldRender {
         match msg {
             () => {
                 // ログインフォームからのログイン結果を受け取る等の処理を行う
@@ -133,4 +148,16 @@ impl Component for App {
             </main>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
