@@ -141,6 +141,69 @@ impl Component for App {
 
     fn view(&self) -> Html {
         html! {
+            <div>
+                <form onsubmit=self.link.callback(|e: FocusEvent| {
+                    e.prevent_default();
+                    ()
+                })>
+                    <label for="login-input">{"Email: "}</label>
+                    <input id="login-input" type="text" />
+
+                    <label for="password-input">{"Password: "}</label>
+                    <input id="password-input" type="password" />
+
+                    <button type="submit">{"Login"}</button>
+                </form>
+            </div>
+        }
+    }
+}
+
+// メッセージコンポーネント
+#[derive(Properties, Clone, PartialEq)]
+struct MessageComponentProps {
+    message: String,
+}
+
+fn message_component(props: &MessageComponentProps) -> Html {
+    html! {
+        <p><b>{ &props.message }</b></p>
+    }
+}
+
+// アプリケーションのエントリーポイント
+fn main() {
+    yew::start_app::<App>();
+}
+
+// アプリケーションのコンポーネント
+struct App;
+
+impl Component for App {
+    type Message = LoginResult;
+    type Properties = ();
+
+    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+        App
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            LoginResult::Success(msg) => {
+                // ログイン成功時のメッセージを受信
+                // ここでページの遷移などの処理を行う
+                true // 再描画をトリガー
+            }
+            LoginResult::Failure(msg) => {
+                // ログイン失敗時のメッセージを受信
+                // ここでエラーメッセージを表示などの処理を行う
+                true // 再描画をトリガー
+            }
+        }
+    }
+
+    fn view(&self) -> Html {
+        html! {
             <main class="container">
                 <div class="row">
                     <a href="https://">
