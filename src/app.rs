@@ -1,7 +1,5 @@
-use wasm_bindgen::JsCast;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
-use tauri::api::{webview::WebviewBuilder, Environment, Content};
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -10,23 +8,14 @@ enum LoginResult {
 }
 
 // ログインフォームのコンポーネント
-struct LoginForm {
-    on_login: Callback<LoginResult>, // プロパティを直接定義
-}
-
-#[derive(Properties, Clone, PartialEq)]
-struct LoginFormProps {
-    on_login: Callback<LoginResult>,
-}
+struct LoginForm;
 
 impl Component for LoginForm {
     type Message = ();
-    type Properties = LoginFormProps;
+    type Properties = ();
 
-    fn create(props: &yew::Context<LoginForm>) -> Self {
-        LoginForm {
-            on_login: props.on_login,
-        }
+    fn create(_: &yew::Context<Self>) -> Self {
+        LoginForm
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -51,7 +40,7 @@ impl Component for LoginForm {
                 // 非同期処理の結果を処理
                 wasm_bindgen_futures::spawn_local(async move {
                     let result = future.await;
-                    self.on_login.emit(result);
+                    yew::Callback::noop().emit(result);
                 });
             }
         }
@@ -61,10 +50,7 @@ impl Component for LoginForm {
     fn view(&self) -> Html {
         html! {
             <div>
-                <form onsubmit=self.on_login.reform(|e: FocusEvent| {
-                    e.prevent_default();
-                    ()
-                })>
+                <form onsubmit=|e: FocusEvent| { e.prevent_default(); () }>
                     <label for="login-input">{"Email: "}</label>
                     <input id="login-input" type="text" />
 
@@ -76,97 +62,76 @@ impl Component for LoginForm {
             </div>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // メッセージコンポーネント
-#[derive(Properties, Clone, PartialEq)]
-struct MessageComponentProps {
-    message: String,
-}
+struct MessageComponent;
 
-fn message_component(props: &MessageComponentProps) -> Html {
-    html! {
-        <p><b>{ &props.message }</b></p>
+impl Component for MessageComponent {
+    type Message = Option<String>;
+    type Properties = ();
+
+    fn create(_: &yew::Context<Self>) -> Self {
+        MessageComponent
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        if let Some(message) = msg {
+            // ログイン成功時のメッセージを受信
+            // メッセージを表示する等の処理を行う
+        } else {
+            // ログイン失敗時のメッセージを受信
+            // エラーメッセージを表示する等の処理を行う
+        }
+        false
+    }
+
+    fn view(&self) -> Html {
+        html! {
+            <p>{"Message Component"}</p>
+        }
     }
 }
 
 // アプリケーションのコンポーネント
-struct App {
-    message: Option<String>, // Option<String>を使ってメッセージを管理
-}
+struct App;
 
 impl Component for App {
     type Message = LoginResult;
     type Properties = ();
 
-    fn create(_: &yew::Context<App>) -> Self {
-        App {
-            message: None, // メッセージを初期化
-        }
+    fn create(_: &yew::Context<Self>) -> Self {
+        App
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             LoginResult::Success(msg) => {
                 // ログイン成功時のメッセージを受信
-                self.message = Some(msg); // メッセージをセット
-                true // 再描画をトリガー
+                // メッセージコンポーネントに渡す等の処理を行う
+                true
             }
             LoginResult::Failure(msg) => {
                 // ログイン失敗時のメッセージを受信
-                self.message = Some(msg); // メッセージをセット
-                true // 再描画をトリガー
+                // メッセージコンポーネントに渡す等の処理を行う
+                true
             }
         }
     }
 
     fn view(&self) -> Html {
         html! {
-            <main class="container">
-                <div class="row">
-                    <a href="https://tauri.app" target="_blank">
-                        <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-                    </a>
-                    <a href="https://yew.rs" target="_blank">
-                        <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
-                    </a>
-                    <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
-                        <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
-                    </a>
-                </div>
-
-                <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
+            <main>
                 // ログインフォームの表示
-                <LoginForm on_login=self.link.callback(|result| result) />
-
+                <LoginForm />
+                
                 // メッセージコンポーネントの表示
-                <MessageComponent message={ self.message.clone() } />
+                <MessageComponent />
             </main>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
+}
+
+fn main() {
+    yew::start_app::<App>();
 }
