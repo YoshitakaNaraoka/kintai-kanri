@@ -143,25 +143,26 @@ impl Component for App {
         html! {
             <main class="container">
                 <div class="row">
-                    <a href="https://">
+                    <a href="https://tauri.app" target="_blank">
                         <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
                     </a>
-                    <a href="https://">
+                    <a href="https://yew.rs" target="_blank">
                         <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
                     </a>
-                    <a href="https://">
+                    <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
                         <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
                     </a>
                 </div>
-
+    
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
+    
                 // ログインフォームの表示
                 <LoginForm on_login=self.link.callback(|result| result) />
-                
+    
                 // メッセージコンポーネントの表示
                 <MessageComponent message={login_msg.get(0..).map(|s| s.to_string()).unwrap_or_default()} />
             </main>
         }
     }
+    
 }
