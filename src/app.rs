@@ -1,15 +1,12 @@
+use wasm_bindgen::JsCast;
+use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
+use yew_router::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
     Success(String),
     Failure(String),
-}
-
-// アプリケーションのルートとなるルーティングを定義する列挙型
-pub enum AppRoute {
-    Login,
-    Hello,
 }
 
 // ログインフォームのコンポーネント
@@ -37,18 +34,6 @@ impl Component for LoginForm {
             </form>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // メッセージコンポーネント
@@ -72,18 +57,6 @@ impl Component for MessageComponent {
             <p>{"Message Component"}</p>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
 
 // アプリケーションのコンポーネント
@@ -135,31 +108,15 @@ impl Component for App {
                 <Router<AppRoute, ()>
                     render=Router::render(move |switch: AppRoute| {
                         match switch {
-                            AppRoute::Login => {
-                                html! {
-                                    <LoginForm />
-                                }
-                            },
-                            AppRoute::Hello => html! {
-                                <div>{"Hello, World!"}</div>
-                            },
+                            AppRoute::Login => html! { <LoginForm /> },
+                            AppRoute::Hello => html! { <div>{"Hello, World!"}</div> },
                         }
                     })
+                    
+                    
                 />
                 <p><b>{ &self.login_msg }</b></p>
             </main>
         }
     }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
