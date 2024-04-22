@@ -1,7 +1,4 @@
-use wasm_bindgen::JsCast;
-use web_sys::HtmlInputElement;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -53,12 +50,14 @@ impl Component for App {
                 // ログイン要求をサーバーに送信する処理などを実装
             }
             AppRoute::Hello => {
-                // Helloページに遷移する処理などを実装
+                // Helloページに遷移する処理を実装
+                // ここではAppRoute::Helloを返すことでHelloページに遷移する
+                AppRoute::Hello
             }
         }
         true // コンポーネントの再描画が必要
     }
-
+    
     fn view(&self, _: &Context<Self>) -> Html {
         html! {
             <main class="container">
@@ -77,13 +76,14 @@ impl Component for App {
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
                 <Router<AppRoute, ()>
-                    render=Router::render(move |switch: AppRoute| {
-                        match switch {
-                            AppRoute::Login => html! { <LoginForm /> },
-                            AppRoute::Hello => html! { <div>{"Hello, World!"}</div> },
-                        }
-                    })
-                />
+    render=Router::render(move |switch: AppRoute| {
+        match switch {
+            AppRoute::Login => html! { <LoginForm /> },
+            AppRoute::Hello => html! { <HelloPage /> }, // Helloページのコンポーネントを表示
+        }
+    })
+/>
+
             </main>
         }
     }
