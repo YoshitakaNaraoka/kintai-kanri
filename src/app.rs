@@ -23,8 +23,16 @@ impl Component for LoginForm {
         match msg {
             () => {
                 let document = window().unwrap().document().unwrap();
-                let mail_input = document.get_element_by_id("login-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
-                let pass_input = document.get_element_by_id("password-input").unwrap().dyn_into::<HtmlInputElement>().unwrap();
+                let mail_input = document
+                    .get_element_by_id("login-input")
+                    .unwrap()
+                    .dyn_into::<HtmlInputElement>()
+                    .unwrap();
+                let pass_input = document
+                    .get_element_by_id("password-input")
+                    .unwrap()
+                    .dyn_into::<HtmlInputElement>()
+                    .unwrap();
                 let mail_value = mail_input.value();
                 let pass_value = pass_input.value();
 
@@ -48,21 +56,21 @@ impl Component for LoginForm {
         false
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
                 <form onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
                     <label for="login-input">{"Email: "}</label>
                     <input id="login-input" type="text" />
-        
+
                     <label for="password-input">{"Password: "}</label>
                     <input id="password-input" type="password" />
-        
+
                     <button type="submit">{"Login"}</button>
                 </form>
             </div>
         }
-    }    
+    }
 }
 
 // メッセージコンポーネント
@@ -77,7 +85,7 @@ impl Component for MessageComponent {
     }
 
     fn update(&mut self, _: &yew::Context<MessageComponent>, msg: Self::Message) -> bool {
-        if let Some(message) = msg {
+        if let Some(_message) = msg {
             // ログイン成功時のメッセージを受信
             // メッセージを表示する等の処理を行う
         } else {
@@ -87,7 +95,7 @@ impl Component for MessageComponent {
         false
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <p>{"Message Component"}</p>
         }
@@ -114,7 +122,7 @@ impl Component for App {
         }
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <main>
                 // ログインフォームの表示
