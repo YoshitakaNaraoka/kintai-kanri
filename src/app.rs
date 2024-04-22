@@ -24,7 +24,7 @@ impl Component for LoginForm {
 
     fn view(&self, _: &Context<Self>) -> Html {
         html! {
-            <form class="row" onsubmit=|e: SubmitEvent| { e.prevent_default(); }>
+            <form class="row" onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
                 <input id="login-input" placeholder="Your mail address" />
                 <input id="password-input" placeholder="Password" type="password" />
                 <button type="submit">{"Login"}</button>
@@ -87,4 +87,16 @@ impl Component for App {
             </main>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
