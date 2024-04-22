@@ -80,12 +80,12 @@ impl Component for App {
             AppRoute::Hello => {
                 // Helloページに遷移する処理を実装
                 // ここではAppRoute::Helloを返すことでHelloページに遷移する
-                AppRoute(Hello)
             }
             AppRoute::Root => todo!(),
         }
         true // コンポーネントの再描画が必要
     }
+    
 
     fn view(&self, _: &Context<Self>) -> Html {
         html! {
