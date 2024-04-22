@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use yew_router::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -17,24 +18,51 @@ impl Component for LoginForm {
         LoginForm
     }
 
-    fn update(&mut self, _: &Context<Self>, _: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &yew::Context<Self>, _: Self::Message) -> bool {
         // ログインフォームの更新ロジックをここに実装
         false
     }
+    
 
     fn view(&self, _: &Context<Self>) -> Html {
         html! {
-            <form class="row" onsubmit=|e: SubmitEvent| { e.prevent_default(); }>
+            // フォームのonsubmitイベントに関数を指定する場合は、イベントハンドラをブロックで囲む必要があります。
+            // ブロックで囲んで、式文として関数を返すようにします。
+            <form class="row" onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
                 <input id="login-input" placeholder="Your mail address" />
                 <input id="password-input" placeholder="Password" type="password" />
                 <button type="submit">{"Login"}</button>
             </form>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
+    
 }
 
 // アプリケーションのコンポーネント
 pub struct App;
+
+#[derive(Debug, Clone, PartialEq, Routable)]
+pub enum AppRoute {
+    #[at("/login")]
+    Login,
+    #[at("/hello")]
+    Hello,
+    #[at("/")]
+    Root,
+}
+
 
 impl Component for App {
     type Message = AppRoute;
@@ -44,7 +72,7 @@ impl Component for App {
         App
     }
 
-    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             AppRoute::Login => {
                 // ログイン要求をサーバーに送信する処理などを実装
@@ -52,8 +80,9 @@ impl Component for App {
             AppRoute::Hello => {
                 // Helloページに遷移する処理を実装
                 // ここではAppRoute::Helloを返すことでHelloページに遷移する
-                AppRoute::Hello
+                AppRoute(Hello)
             }
+            AppRoute::Root => todo!(),
         }
         true // コンポーネントの再描画が必要
     }
