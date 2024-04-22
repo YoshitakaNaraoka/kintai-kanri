@@ -57,34 +57,34 @@ impl Component for App {
         }
         true // コンポーネントの再描画が必要
     }
-    
+
     fn view(&self, _: &Context<Self>) -> Html {
         html! {
-            <main class="container">
-                <div class="row">
-                    <a href="https://tauri.app" target="_blank">
-                        <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-                    </a>
-                    <a href="https://yew.rs" target="_blank">
-                        <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
-                    </a>
-                    <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
-                        <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
-                    </a>
-                </div>
+                    <main class="container">
+                        <div class="row">
+                            <a href="https://tauri.app" target="_blank">
+                                <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
+                            </a>
+                            <a href="https://yew.rs" target="_blank">
+                                <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
+                            </a>
+                            <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
+                                <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
+                            </a>
+                        </div>
 
-                <p>{"Click on the Tauri and Yew logos to learn more."}</p>
+                        <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
-                <Router<AppRoute, ()>
-    render=Router::render(move |switch: AppRoute| {
-        match switch {
-            AppRoute::Login => html! { <LoginForm /> },
-            AppRoute::Hello => html! { <HelloPage /> }, // Helloページのコンポーネントを表示
-        }
-    })
-/>
+                        <Router<AppRoute, ()>
+            render=Router::render(move |switch: AppRoute| {
+                match switch {
+                    AppRoute::Login => html! { <LoginForm /> },
+                    AppRoute::Hello => html! { <HelloPage /> }, // Helloページのコンポーネントを表示
+                }
+            })
+        />
 
-            </main>
-        }
+                    </main>
+                }
     }
 }
