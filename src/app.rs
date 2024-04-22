@@ -1,4 +1,4 @@
-use wasm_bindgen::JsCast;
+use wasm_bindgen::*;
 use web_sys::{window, HtmlInputElement};
 use yew::prelude::*;
 use yew_router::*;
@@ -119,4 +119,16 @@ impl Component for App {
             </main>
         }
     }
+    
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        true
+    }
+    
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
+    
+    fn prepare_state(&self) -> Option<String> {
+        None
+    }
+    
+    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
