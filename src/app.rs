@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew_router::*;
+use yew_router::prelude::*;
 
 // サーバーからの応答に基づくログイン結果を表す列挙型
 enum LoginResult {
@@ -35,6 +35,14 @@ impl Component for LoginForm {
 
 // アプリケーションのコンポーネント
 pub struct App;
+enum AppRoute {
+  #[to="/login"]
+  Login,
+  #[to="/hello"]
+  Hello,
+  #[to="/"]
+  Home
+}
 
 impl Component for App {
     type Message = AppRoute;
@@ -54,7 +62,7 @@ impl Component for App {
                 // Helloページに遷移する処理を実装
                 true // コンポーネントの再描画が必要
             }
-            AppRoute::Root => false,
+            AppRoute => false,
         }
     }
 
@@ -74,15 +82,6 @@ impl Component for App {
                 </div>
 
                 <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
-                <Router<AppRoute, ()>
-                    render=Router::render(move |switch: AppRoute| {
-                        match switch {
-                            AppRoute::Login => html! { <LoginForm /> },
-                            AppRoute::Hello => html! { <HelloPage /> },
-                        }
-                    })
-                />
 
             </main>
         }
