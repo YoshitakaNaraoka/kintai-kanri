@@ -1,101 +1,67 @@
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
-// サーバーからの応答に基づくログイン結果を表す列挙型
-enum LoginResult {
-    Success(String),
-    Failure(String),
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
+    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 
-// ログインフォームのコンポーネント
-struct LoginForm;
+#[derive(Serialize, Deserialize)]
+struct LoginArgs<'a> {
+    mail: &'a str,
+    pass: &'a str,
+}
 
-impl Component for LoginForm {
-    type Message = ();
-    type Properties = ();
+#[function_component(App)]
+pub fn app() -> Html {
+    let login_input_ref = use_node_ref();
+    let (mail, set_mail) = use_state(|| String::new());
+    let (login_msg, set_login_msg) = use_state(|| String::new());
 
-    fn create(_: &Context<Self>) -> Self {
-        LoginForm
-    }
+    html! {
+        <main class="container">
+            <div class="row">
+                <a href="https://tauri.app" target="_blank">
+                    <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
+                </a>
+                <a href="https://yew.rs" target="_blank">
+                    <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
+                </a>
+                <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
+                    <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
+                </a>
+            </div>
 
-    fn update(&mut self, _: &Context<Self>, _: Self::Message) -> bool {
-        false
-    }
+            <p>{"Click on the Tauri and Yew logos to learn more."}</p>
 
-    fn view(&self, _: &Context<Self>) -> Html {
-        html! {
-            <form class="row" onsubmit={|e: SubmitEvent| { e.prevent_default(); }}>
-                <input id="login-input" placeholder="Your mail address" />
-                <input id="password-input" placeholder="Password" type="password" />
+            <form class="row" onsubmit=|e: SubmitEvent| {
+                e.prevent_default();
+                let mail_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
+                let pass_value = login_input_ref.cast::<web_sys::HtmlInputElement>().unwrap().value();
+                if mail_value.is_empty() || pass_value.is_empty() {
+                    return;
+                }
+
+                let args = serde_wasm_bindgen::to_value(&LoginArgs {
+                    mail: &mail_value,
+                    pass: &pass_value,
+                }).unwrap();
+                
+                let login_msg_clone = login_msg.clone();
+                spawn_local(async move {
+                    let new_msg = invoke("login", args).await.as_string().unwrap_or_else(|| String::from(""));
+                    set_login_msg(new_msg);
+                });
+            }>
+                <input id="login-input" ref={&login_input_ref} placeholder="Your mail address" />
+                <input id="login-input" ref={&login_input_ref} placeholder="Password" />
                 <button type="submit">{"Login"}</button>
             </form>
-        }
+
+            <p><b>{ &*login_msg }</b></p>
+        </main>
     }
-}
-
-// アプリケーションのコンポーネント
-pub struct App;
-enum AppRoute {
-  #[to="/login"]
-  Login,
-  #[to="/hello"]
-  Hello,
-  #[to="/"]
-  Home
-}
-
-impl Component for App {
-    type Message = AppRoute;
-    type Properties = ();
-
-    fn create(_: &Context<Self>) -> Self {
-        App
-    }
-
-    fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            AppRoute::Login => {
-                // ログイン要求をサーバーに送信する処理などを実装
-                false
-            }
-            AppRoute::Hello => {
-                // Helloページに遷移する処理を実装
-                true // コンポーネントの再描画が必要
-            }
-            AppRoute => false,
-        }
-    }
-
-    fn view(&self, _: &Context<Self>) -> Html {
-        html! {
-            <main class="container">
-                <div class="row">
-                    <a href="https://tauri.app" target="_blank">
-                        <img src="public/tauri.svg" class="logo tauri" alt="Tauri logo"/>
-                    </a>
-                    <a href="https://yew.rs" target="_blank">
-                        <img src="public/yew.png" class="logo yew" alt="Yew logo"/>
-                    </a>
-                    <a href="https://www.google.com/intl/ja/chrome/" target="_blank">
-                        <img src="public/chrome-logo-m100.svg" class="logo chrome" alt="Chrome logo"/>
-                    </a>
-                </div>
-
-                <p>{"Click on the Tauri and Yew logos to learn more."}</p>
-
-            </main>
-        }
-    }
-    
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        true
-    }
-    
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {}
-    
-    fn prepare_state(&self) -> Option<String> {
-        None
-    }
-    
-    fn destroy(&mut self, ctx: &Context<Self>) {}
 }
